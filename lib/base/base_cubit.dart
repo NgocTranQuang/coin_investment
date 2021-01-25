@@ -12,4 +12,12 @@ class BaseCubit extends Cubit<bool> {
     bsLoading.close();
     bsRefresh.close();
   }
+  
+  showLoading() {
+    bsLoading.sink.add(true);
+  }
+
+  hideLoading() {
+    bsLoading.sink.add(false);
+  }
 }

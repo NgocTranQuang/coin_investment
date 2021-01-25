@@ -32,12 +32,21 @@ dependencies:
   rxdart: ^0.25.0
   flutter_cubit: ^0.1.1
   money2: ^1.4.3
+  flutter_slidable: ^0.5.4
+  http: ^0.12.2
+  json_annotation: ^3.1.1
+  build_runner: ^1.11.0
+  json_serializable: ^3.5.1
+
+
 
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -51,8 +60,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/images/2.0x/
-    - assets/images/3.0x/
+    # - assets/images/2.0x/
+    # - assets/images/3.0x/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

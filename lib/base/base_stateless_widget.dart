@@ -9,12 +9,15 @@ import 'package:my_investment/interface/main_body.dart';
 abstract class BaseStatelessWidget<T extends BaseCubit> extends StatelessWidget
     with IMainBody {
   final String title;
+  BuildContext currentContext;
 
   BaseStatelessWidget(this.title);
 
-  MainBodyPage bodyPage;
-
   T getCubit();
+  @override
+  buildContext(BuildContext context) {
+    currentContext = context;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +32,7 @@ abstract class BaseStatelessWidget<T extends BaseCubit> extends StatelessWidget
   }
 
   Widget getMainBody(BuildContext context) {
-    bodyPage = MainBodyPage<T>(iMainBody: this);
-    return bodyPage;
+    return MainBodyPage<T>(iMainBody: this);
   }
 
   Widget getBackButton(BuildContext context) {
@@ -97,7 +99,6 @@ abstract class BaseStatelessWidget<T extends BaseCubit> extends StatelessWidget
 }
 
 class MainBodyPage<T extends BaseCubit> extends StatefulWidget {
-  BuildContext currentContext;
   final IMainBody iMainBody;
 
   MainBodyPage({Key key, this.iMainBody}) : super(key: key);
@@ -110,7 +111,7 @@ class _MainBodyState<T extends BaseCubit> extends State<MainBodyPage> {
   @override
   void initState() {
     super.initState();
-    widget.currentContext = context;
+    widget.iMainBody.buildContext(context);
     widget.iMainBody.initState();
   }
 

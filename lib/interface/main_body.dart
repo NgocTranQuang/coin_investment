@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-abstract class IMainBody{
+abstract class IMainBody {
+  buildContext(BuildContext context);
   initState();
   dispose();
   Widget getBody(BuildContext context);

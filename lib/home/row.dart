@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:my_investment/extension/double_ex.dart';
 import 'package:my_investment/model/coin_model.dart';
@@ -18,7 +16,7 @@ class RowCoin extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -26,16 +24,16 @@ class RowCoin extends StatelessWidget {
                 SizedBox(
                   width: 8,
                 ),
-                Expanded(flex:1,child: common2()),
+                Expanded(flex: 1, child: common2()),
                 SizedBox(
                   width: 8,
                 ),
-                Expanded(flex:1,child: common3()),
+                // Expanded(flex: 1, child: common3()),
               ],
             ),
           ),
           Divider(
-            thickness: 1,
+            height: 1,
           )
         ],
       ),
@@ -46,8 +44,14 @@ class RowCoin extends StatelessWidget {
     return Column(
       children: [
         Text(coinModel.symbol),
-        SizedBox(height: 4,),
-        Image.asset(ImageName.bitcoin,width: 40,height: 40, )
+        SizedBox(
+          height: 4,
+        ),
+        Image.asset(
+          ImageName.bitcoin,
+          width: 40,
+          height: 40,
+        )
       ],
     );
   }
@@ -57,9 +61,9 @@ class RowCoin extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Text("Price Buy :${coinModel.priceBuy.toPrice()}"),
-        Text("Price now :${coinModel.priceNow.toPrice()}"),
-        Text("Amount : ${coinModel.amount.toFormat2D()}"),
+        Text("Price usdt :${coinModel.priceBuy}"),
+        Text("Price busd :${coinModel.priceNow}"),
+        Text("Hieu : ${coinModel.amount}"),
       ],
     );
   }

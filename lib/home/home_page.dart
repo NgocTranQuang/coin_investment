@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:my_investment/base/base_stateless_widget.dart';
 import 'package:my_investment/custom_widget/streambuilder/custom_streambuilder.dart';
 import 'package:my_investment/extension/base_state_less_ex.dart';
@@ -8,6 +7,7 @@ import 'package:my_investment/home/home_cubit.dart';
 import 'package:my_investment/home/row.dart';
 import 'package:my_investment/model/coin_model.dart';
 
+// ignore: must_be_immutable
 class HomePage extends BaseStatelessWidget<HomeCubit> {
   // final String title;
   static final String pageName = "HomePage";
@@ -20,7 +20,7 @@ class HomePage extends BaseStatelessWidget<HomeCubit> {
 
   @override
   initState() {
-    cubit.getListCoin();
+    cubit.getPrice();
   }
 
   @override
@@ -33,7 +33,8 @@ class HomePage extends BaseStatelessWidget<HomeCubit> {
             child: ListView.builder(
                 itemCount: snapshot.data.length,
                 itemBuilder: (context, index) {
-                  return RowCoin(snapshot.data[index]);
+                  var item = snapshot.data[index];
+                  return RowCoin(item);
                 }),
           );
         });
