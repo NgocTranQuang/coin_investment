@@ -1,22 +1,53 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:my_investment/base/base_cubit.dart';
 import 'package:my_investment/model/coin_model.dart';
 import 'package:my_investment/model/coin_price.dart';
 import 'package:my_investment/utils/all_coin.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:http/http.dart' as http;
 
 class HomeCubit extends BaseCubit {
   BehaviorSubject<List<CoinModel>> listCoins = BehaviorSubject();
   var a = List<CoinModel>();
   var size = all_coin.length;
 
+  var listAllPrice = List<CoinPrice>();
+
   getPrice() async {
     showLoading();
     // abc();
     fetchAllPrice().then((value) {
-      jsonEncode(value.tojSon());
+      listAllPrice = value;
+      print("${jsonEncode(value)}");
+
+      var listUSDT = value.where((element) {
+        return element.symbol.endsWith("USDT");
+      }).toList();
+
+      listUSDT.forEach((element) {
+        var coin = element.symbol.replaceAll("USDT", "");
+        element.listChild = value.where((element) {
+          return element.symbol.contains(coin);
+        }).toList();
+      });
+      // var list2 = value.where((element) {
+      //   return element.symbol.startsWith("USDT");
+      // });
+      print(jsonEncode(listUSDT));
+      hideLoading();
+    });
+  }
+  getAllCoupleWith(CoinPrice coinPrice){
+    coinPrice.listChild = findAllCoupleWith(coinPrice.symbol);
+  }
+
+  List<CoinPrice> findAllCoupleWith(String symbols) {
+    return listAllPrice.where((element) {
+      return element.symbol.contains(symbols);
+    }).toList().map((e){
+      getAllCoupleWith(e);
+      return e;
     });
   }
 
@@ -39,7 +70,7 @@ class HomeCubit extends BaseCubit {
     }
   }
 
-  Future<CoinPrice> fetchAllPrice() async {
+  Future<List<CoinPrice>> fetchAllPrice() async {
     final response =
         await http.get('https://www.binance.com/api/v1/ticker/allPrices');
 
@@ -47,7 +78,11 @@ class HomeCubit extends BaseCubit {
       // If the server did return a 200 OK response,
       // then parse the JSON.
       print("Request all price ngon lành");
-      return CoinPrice.fromJson(jsonDecode(response.body));
+      var json = jsonDecode(response.body);
+      List<CoinPrice> list =
+          List<CoinPrice>.from(json.map((model) => CoinPrice.fromJson(model)));
+
+      return list;
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
