@@ -13,42 +13,86 @@ class HomeCubit extends BaseCubit {
   var size = all_coin.length;
 
   var listAllPrice = List<CoinPrice>();
+  var usdt = CoinPrice(price: "1", symbol: "vkl");
+  var listNoded = List<String>();
 
   getPrice() async {
     showLoading();
     // abc();
-    fetchAllPrice().then((value) {
-      listAllPrice = value;
+    fetchAllPrice().then((value) async {
+      listAllPrice = value.toList();
       print("${jsonEncode(value)}");
+      var a = await addAllCoupleWith("USDT", usdt);
 
-      var listUSDT = value.where((element) {
-        return element.symbol.endsWith("USDT");
-      }).toList();
-
-      listUSDT.forEach((element) {
-        var coin = element.symbol.replaceAll("USDT", "");
-        element.listChild = value.where((element) {
-          return element.symbol.contains(coin);
-        }).toList();
-      });
-      // var list2 = value.where((element) {
-      //   return element.symbol.startsWith("USDT");
+      // var listUSDT = value.where((element) {
+      //   return element.symbol.endsWith("USDT");
+      // }).toList();
+      //
+      // listUSDT.forEach((element) {
+      //   var coin = element.symbol.replaceAll("USDT", "");
+      //   element.listChild = value.where((element) {
+      //     return element.symbol.contains(coin);
+      //   }).toList();
       // });
-      print(jsonEncode(listUSDT));
+      // // var list2 = value.where((element) {
+      // //   return element.symbol.startsWith("USDT");
+      // // });
+      // print(jsonEncode(listUSDT));
       hideLoading();
     });
   }
-  getAllCoupleWith(CoinPrice coinPrice){
-    coinPrice.listChild = findAllCoupleWith(coinPrice.symbol);
+
+  addAllCoupleWith(
+    String mainSymbols,
+    CoinPrice coinPrice,
+  ) {
+    print("Bắt đầu tìm list chid của  ${coinPrice.symbol}");
+    coinPrice.listChild = findAllCoupleWith(mainSymbols, coinPrice.symbol);
   }
 
-  List<CoinPrice> findAllCoupleWith(String symbols) {
-    return listAllPrice.where((element) {
-      return element.symbol.contains(symbols);
-    }).toList().map((e){
-      getAllCoupleWith(e);
-      return e;
-    });
+  List<CoinPrice> findAllCoupleWith(String mainSymbols, String symbolsEx) {
+    print("Đang chạy tìm tất cả các cặp tiền của $mainSymbols");
+    var parentSymbol = symbolsEx.replaceAll(mainSymbols, "");
+    return listAllPrice
+        .where((element) {
+
+          if(mainSymbols =="ETH" && parentSymbol =="BTC"){
+            print("abcd");
+          }
+          return element.symbol.contains(mainSymbols) &&
+              !element.symbol.contains(parentSymbol);
+        })
+        .toList()
+        .map((e) {
+          var coin = e.symbol.replaceAll(mainSymbols, "");
+          print("Các cặp tiền của $mainSymbols là  ${coin}");
+          if (coin != "") {
+            var l = listNoded.where((element) {
+              return element == coin;
+            }).toList();
+            if (l.length == 0) {
+              if (coin != "USDT") {
+                listNoded.add(coin);
+              }
+              addAllCoupleWith(coin, e);
+            } else {
+              // var child = listAllPrice
+              //     .where((element) =>
+              //         (element.symbol.contains("USDT$symbols") ||
+              //             element.symbol.contains("${symbols}USDT")))
+              //     .toList();
+
+              e.listChild = listAllPrice
+                      .where((element) =>
+                          (element.symbol.contains("USDT$mainSymbols") ||
+                              element.symbol.contains("${mainSymbols}USDT")))
+                      .toList() ??
+                  List<CoinPrice>.generate(1, (index) => CoinPrice(price :"1", symbol: "Ko co USDT$mainSymbols hoặc ${mainSymbols}USDT"));
+            }
+          }
+          return e;
+        })
+        .toList();
   }
 
   abc() {
@@ -120,5 +164,9 @@ class HomeCubit extends BaseCubit {
   dispose() {
     super.dispose();
     listCoins.close();
+  }
+
+  tenHam(int Function(String a) haha) {
+    haha.call("d");
   }
 }

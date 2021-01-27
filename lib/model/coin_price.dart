@@ -17,5 +17,9 @@ class CoinPrice {
 
   Map<String, dynamic> toJson() => _$CoinPriceToJson(this);
 
+  @override
+  String toString() {
+    return symbol;
+  }
 }
 
