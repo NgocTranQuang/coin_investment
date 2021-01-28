@@ -209,6 +209,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.1"
+  flutter_event_bus:
+    dependency: "direct main"
+    description:
+      name: flutter_event_bus
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.2"
   flutter_slidable:
     dependency: "direct main"
     description:

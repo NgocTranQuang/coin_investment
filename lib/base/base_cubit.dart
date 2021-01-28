@@ -1,4 +1,5 @@
 import 'package:cubit/cubit.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 
 class BaseCubit extends Cubit<bool> {
@@ -14,7 +15,11 @@ class BaseCubit extends Cubit<bool> {
     print("close cubit $runtimeType ${identityHashCode(this)}");
   }
 
-  
+  @override
+  Future<void> close() async {
+    dispose();
+    super.close();
+  }
   showLoading() {
     bsLoading.sink.add(true);
   }

@@ -136,8 +136,8 @@ class _MainBodyState<T extends BaseCubit> extends Interactor<MainBodyPage> {
 
   @override
   void didChangeDependencies() {
-    widget.iMainBody.didChangeDependencies();
     super.didChangeDependencies();
+    widget.iMainBody.didChangeDependencies();
   }
 
   @override
@@ -173,6 +173,7 @@ extension BaseStatelessWidgetEX<T extends BaseCubit> on BaseStatelessWidget<T> {
   }
 
   T get cubit {
+    print("Type T là ${T}");
     return currentContext.cubit<T>();
   }
 }

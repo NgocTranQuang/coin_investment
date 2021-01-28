@@ -23,7 +23,7 @@ class APage extends BaseStatelessWidget<CubitA> {
 
   @override
   Subscription subscribeEvents(EventBus eventBus) {
-    eventBus.respond<int>((event) {
+   return eventBus.respond<int>((event) {
       print("Nhận push $runtimeType");
       cubit.count.sink.add(event);
     });
