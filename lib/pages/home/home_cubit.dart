@@ -62,36 +62,30 @@ class HomeCubit extends BaseCubit {
           return element.symbol.contains(mainSymbols) &&
               !element.symbol.contains(parentSymbol);
         })
-        .toList()
-        .map((e) {
-          var coin = e.symbol.replaceAll(mainSymbols, "");
-          print("Các cặp tiền của $mainSymbols là  ${coin}");
-          if (coin != "") {
-            var l = listNoded.where((element) {
-              return element == coin;
-            }).toList();
-            if (l.length == 0) {
-              if (coin != "USDT") {
-                listNoded.add(coin);
-              }
-              addAllCoupleWith(coin, e);
-            } else {
-              // var child = listAllPrice
-              //     .where((element) =>
-              //         (element.symbol.contains("USDT$symbols") ||
-              //             element.symbol.contains("${symbols}USDT")))
-              //     .toList();
-
-              e.listChild = listAllPrice
-                      .where((element) =>
-                          (element.symbol.contains("USDT$mainSymbols") ||
-                              element.symbol.contains("${mainSymbols}USDT")))
-                      .toList() ??
-                  List<CoinPrice>.generate(1, (index) => CoinPrice(price :"1", symbol: "Ko co USDT$mainSymbols hoặc ${mainSymbols}USDT"));
-            }
-          }
-          return e;
-        })
+        // .toList()
+        // .map((e) {
+        //   var coin = e.symbol.replaceAll(mainSymbols, "");
+        //   print("Các cặp tiền của $mainSymbols là  ${coin}");
+        //   if (coin != "") {
+        //     var l = listNoded.where((element) {
+        //       return element == coin;
+        //     }).toList();
+        //     if (l.length == 0) {
+        //       if (coin != "USDT") {
+        //         listNoded.add(coin);
+        //       }
+        //       addAllCoupleWith(coin, e);
+        //     } else {
+        //       e.listChild = listAllPrice
+        //               .where((element) =>
+        //                   (element.symbol.contains("USDT$mainSymbols") ||
+        //                       element.symbol.contains("${mainSymbols}USDT")))
+        //               .toList() ??
+        //           List<CoinPrice>.generate(1, (index) => CoinPrice(price :"1", symbol: "Ko co USDT$mainSymbols hoặc ${mainSymbols}USDT"));
+        //     }
+        //   }
+        //   return e;
+        // })
         .toList();
   }
 

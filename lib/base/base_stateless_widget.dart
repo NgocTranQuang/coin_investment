@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cubit/flutter_cubit.dart';
+import 'package:flutter_event_bus/flutter_event_bus/EventBus.dart';
+import 'package:flutter_event_bus/flutter_event_bus/Interactor.dart';
+import 'package:flutter_event_bus/flutter_event_bus/Subscription.dart';
 import 'package:my_investment/base/base_cubit.dart';
 import 'package:my_investment/custom_widget/custom_widget.dart';
 import 'package:my_investment/custom_widget/streambuilder/custom_streambuilder.dart';
@@ -14,10 +17,14 @@ abstract class BaseStatelessWidget<T extends BaseCubit> extends StatelessWidget
   BaseStatelessWidget(this.title);
 
   T getCubit();
+
   @override
   buildContext(BuildContext context) {
     currentContext = context;
   }
+
+  @override
+  didChangeDependencies() {}
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +51,7 @@ abstract class BaseStatelessWidget<T extends BaseCubit> extends StatelessWidget
   }
 
   handleBackButton(BuildContext context) {
+    Navigator.pop(context);
     print("Back nè");
   }
 
@@ -56,6 +64,11 @@ abstract class BaseStatelessWidget<T extends BaseCubit> extends StatelessWidget
 
   @override
   dispose() {}
+
+  @override
+  Subscription subscribeEvents(EventBus eventBus) {
+    return null;
+  }
 
   @override
   FloatingActionButton getFloatButton(BuildContext context) {
@@ -107,7 +120,7 @@ class MainBodyPage<T extends BaseCubit> extends StatefulWidget {
   _MainBodyState createState() => _MainBodyState<T>();
 }
 
-class _MainBodyState<T extends BaseCubit> extends State<MainBodyPage> {
+class _MainBodyState<T extends BaseCubit> extends Interactor<MainBodyPage> {
   @override
   void initState() {
     super.initState();
@@ -122,9 +135,14 @@ class _MainBodyState<T extends BaseCubit> extends State<MainBodyPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    widget.iMainBody.didChangeDependencies();
+    super.didChangeDependencies();
+  }
+
+  @override
   Widget build(BuildContext context) {
     print("_MainBodyState");
-
     return Stack(
       children: [
         Scaffold(
@@ -141,6 +159,21 @@ class _MainBodyState<T extends BaseCubit> extends State<MainBodyPage> {
             }),
       ],
     );
+  }
+
+  @override
+  Subscription subscribeEvents(EventBus eventBus) {
+    return widget.iMainBody.subscribeEvents(eventBus);
+  }
+}
+
+extension BaseStatelessWidgetEX<T extends BaseCubit> on BaseStatelessWidget<T> {
+  EventBus get eventBus {
+    return EventBus.of(currentContext);
+  }
+
+  T get cubit {
+    return currentContext.cubit<T>();
   }
 }
 

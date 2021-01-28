@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:my_investment/home/home_page.dart';
+import 'package:flutter_event_bus/flutter_event_bus/EventBusWidget.dart';
+import 'package:my_investment/pages/home/home_page.dart';
+import 'package:my_investment/pages/sceena/apage.dart';
+import 'package:my_investment/utils/app_routes.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,14 +20,20 @@ class MyApp extends StatelessWidget {
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
       ),
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          primaryColor: Colors.lightBlue[800],
-          visualDensity: VisualDensity.adaptivePlatformDensity,
+      child: EventBusWidget(
+        child: MaterialApp(
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            primaryColor: Colors.lightBlue[800],
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+          ),
+          home: HomePage("Home page"),
+          initialRoute: HomePage.pageName,
+          onGenerateRoute: (routeSetting) {
+            return AppRoutes.generateRoute(routeSetting);
+          },
         ),
-        home: HomePage("Home page"),
       ),
     );
   }

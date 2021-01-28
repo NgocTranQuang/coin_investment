@@ -11,7 +11,9 @@ class BaseCubit extends Cubit<bool> {
   dispose() {
     bsLoading.close();
     bsRefresh.close();
+    print("close cubit $runtimeType ${identityHashCode(this)}");
   }
+
   
   showLoading() {
     bsLoading.sink.add(true);
