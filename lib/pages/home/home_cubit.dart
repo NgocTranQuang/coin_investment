@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -15,6 +16,63 @@ class HomeCubit extends BaseCubit {
   var listAllPrice = List<CoinPrice>();
   var usdt = CoinPrice(price: "1", symbol: "vkl");
   var listNoded = List<String>();
+
+  Map coinPyramid = SplayTreeMap<CoinPrice,dynamic>();
+  var listCoinName = List<String>();
+
+
+  finListCoinname(){
+    listNoded.add("USDT");
+    listAllPrice.forEach((element) {
+      listCoinName.forEach((coin) {
+        if(element.symbol.contains(coin)){
+
+        }
+      });
+    });
+  }
+
+  //////////////
+  newVersion() {
+    // tìm tất cả các đồng tiền đi với USDT
+
+
+
+    var listWithUSDT = findAllSymbolsWith("USDT");
+    forListAndSetListChild(listWithUSDT).then((value) {
+
+    });
+    // tìm tất cả những đồng tiền của những đồng tiền đi với usdt
+    // listWithUSDT.forEach((element) {
+    //   element.listChild = findAllSymbolsWith(element.symbol);
+    // });
+    // listWithUSDT.forEach((element) {
+    //   element.listChild.forEach((element) {});
+    // });
+  }
+
+  Future forListWithAndDoSomeThing(List<CoinPrice> list,Function(CoinPrice element) fun) async {
+    for (final element in list) {
+      fun.call(element);
+    }
+  }
+
+  Future forListAndSetListChild(List<CoinPrice> list) async {
+    forListWithAndDoSomeThing(list, (element){
+      element.listChild = findAllSymbolsWith(element.symbol);
+    });
+  }
+
+  List<CoinPrice> findAllSymbolsWith(String symbols) {
+    return listAllPrice
+        .where((element) => element.symbol.contains(symbols))
+        .map((e) {
+      e.symbol = e.symbol.replaceAll(symbols, "");
+      return e;
+    }).toList();
+  }
+
+  ///////////////
 
   getPrice() async {
     showLoading();
@@ -53,15 +111,13 @@ class HomeCubit extends BaseCubit {
   List<CoinPrice> findAllCoupleWith(String mainSymbols, String symbolsEx) {
     print("Đang chạy tìm tất cả các cặp tiền của $mainSymbols");
     var parentSymbol = symbolsEx.replaceAll(mainSymbols, "");
-    return listAllPrice
-        .where((element) {
-
-          if(mainSymbols =="ETH" && parentSymbol =="BTC"){
-            print("abcd");
-          }
-          return element.symbol.contains(mainSymbols) &&
-              !element.symbol.contains(parentSymbol);
-        })
+    return listAllPrice.where((element) {
+      if (mainSymbols == "ETH" && parentSymbol == "BTC") {
+        print("abcd");
+      }
+      return element.symbol.contains(mainSymbols) &&
+          !element.symbol.contains(parentSymbol);
+    })
         // .toList()
         // .map((e) {
         //   var coin = e.symbol.replaceAll(mainSymbols, "");

@@ -6,8 +6,8 @@ part 'coin_price.g.dart';
 /// JSON serialization logic to be generated.
 @JsonSerializable()
 class CoinPrice {
-  final String price;
-  final String symbol;
+   String price;
+   String symbol;
   List<CoinPrice> listChild;
 
   CoinPrice({this.price, this.symbol,this.listChild});
