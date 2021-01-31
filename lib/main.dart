@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_event_bus/flutter_event_bus/EventBusWidget.dart';
+import 'package:my_investment/pages/home/home_cubit.dart';
 import 'package:my_investment/pages/home/home_page.dart';
 import 'package:my_investment/pages/sceena/apage.dart';
 import 'package:my_investment/utils/app_routes.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
-      .then((_) => runApp(MyApp()));
+  // WidgetsFlutterBinding.ensureInitialized();
+  // SystemChrome.setPreferredOrientations(
+  //         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
+  //     .then((_) => runApp(MyApp()));
+  var home = HomeCubit();
+  home.getPrice();
 }
 
 class MyApp extends StatelessWidget {

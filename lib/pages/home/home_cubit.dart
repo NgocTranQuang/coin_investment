@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -14,20 +13,17 @@ class HomeCubit extends BaseCubit {
   var size = all_coin.length;
 
   var listAllPrice = List<CoinPrice>();
-  var usdt = CoinPrice(price: "1", symbol: "vkl");
+  var usdt = CoinPrice(
+      amount: 1000, bidPrice: "1", symbol: "USDT", symbolNode: "USDT");
   var listNoded = List<String>();
 
-  Map coinPyramid = SplayTreeMap<CoinPrice,dynamic>();
   var listCoinName = List<String>();
 
-
-  finListCoinname(){
+  finListCoinName() {
     listNoded.add("USDT");
     listAllPrice.forEach((element) {
       listCoinName.forEach((coin) {
-        if(element.symbol.contains(coin)){
-
-        }
+        if (element.symbol.contains(coin)) {}
       });
     });
   }
@@ -36,12 +32,24 @@ class HomeCubit extends BaseCubit {
   newVersion() {
     // tìm tất cả các đồng tiền đi với USDT
 
-
-
-    var listWithUSDT = findAllSymbolsWith("USDT");
-    forListAndSetListChild(listWithUSDT).then((value) {
-
+    // var listWithUSDT = findAllSymbolsWith(usdt, true);
+    findAllSymbolsWithASYNC(usdt, true).then((value) async {
+      value.forEach((element) {
+        print("DKM foreach ${element.symbol}");
+        element.listChild = findAllSymbolsWith(element, false);
+      });
     });
+    // listWithUSDT.forEach((element) {
+    //   element.listChild = findAllSymbolsWith(element, false);
+    // });
+    print("object");
+
+    // listWithUSDT.forEach((element) {
+    //   // element.listChild =
+    // });
+    // listWithUSDT.forEach((element) {
+    //   element.listChild.forEach((element) {});
+    // });
     // tìm tất cả những đồng tiền của những đồng tiền đi với usdt
     // listWithUSDT.forEach((element) {
     //   element.listChild = findAllSymbolsWith(element.symbol);
@@ -51,23 +59,93 @@ class HomeCubit extends BaseCubit {
     // });
   }
 
-  Future forListWithAndDoSomeThing(List<CoinPrice> list,Function(CoinPrice element) fun) async {
+  Future forListWithAndDoSomeThing(
+      List<CoinPrice> list, Function(CoinPrice element) fun) async {
     for (final element in list) {
       fun.call(element);
     }
   }
 
   Future forListAndSetListChild(List<CoinPrice> list) async {
-    forListWithAndDoSomeThing(list, (element){
-      element.listChild = findAllSymbolsWith(element.symbol);
+    forListWithAndDoSomeThing(list, (element) {
+      // element.listChild = findAllSymbolsWith(element.symbol);
     });
   }
 
-  List<CoinPrice> findAllSymbolsWith(String symbols) {
-    return listAllPrice
-        .where((element) => element.symbol.contains(symbols))
-        .map((e) {
-      e.symbol = e.symbol.replaceAll(symbols, "");
+  Future<List<CoinPrice>> findAllSymbolsWithASYNC(
+      CoinPrice coinPrice, bool start) async {
+    return findAllSymbolsWith(coinPrice, start);
+  }
+
+  List<CoinPrice> findAllSymbolsWith(CoinPrice coinPrice, bool start) {
+    print(
+        "************************ bắt đầu tìm list child cho ${coinPrice.toString()}");
+    var symbols = coinPrice.symbolNode;
+    if (symbols == "" || symbols == null) {
+      print("DKM symbols bằng null");
+      return null;
+    }
+    if (start == false) {
+      if (symbols == "USDT") {
+        return null;
+      }
+    }
+    var listWithSymbol = listAllPrice
+        .where((element) => ((element.symbol.startsWith(symbols) ||
+            element.symbol.endsWith(symbols))))
+        .toList();
+    print("Coin $symbols có ${listWithSymbol.length} thằng coin con cặp với nó");
+    return listWithSymbol.map((ele) {
+      var e = CoinPrice(
+          symbol: ele.symbol,
+          amount: ele.amount,
+          bidPrice: ele.bidPrice,
+          symbolNode: ele.symbolNode,
+          listChild: ele.listChild);
+      print("------------------------");
+      var coin = e.symbol.replaceAll(symbols, "");
+      print("Bắt đầu xét thằng ${coin}");
+      // vì điều kiện where như vậy chưa chắc là lấy đúng những đồng coin có đi cặp với symbols,nên ở đây cần phải check đồng coin đó có dc giao dịch với btc nữa hay ko
+      if (coin != "BTC") {
+        var listWithBtc = listAllPrice
+            .where((element) => (element.symbol == "${coin}BTC" ||
+                element.symbol == "BTC${coin}"))
+            .toList();
+        if (listWithBtc.length == 0) {
+          print("Đồng ${coin} này méo dc giao dịch với BTC");
+          return CoinPrice();
+        }
+      }
+      if (listNoded.contains(coin) || coin == "") {
+        print("Coin $coin này đã có trong node");
+        // coin này đã có trong node
+        // lấy cặp symbol với USDT
+        var list = listAllPrice
+            .where((element) => (element.symbol == "${symbols}USDT" ||
+                element.symbol == "USDT${symbols}"))
+            .toList();
+        if ((list?.length ?? 0) == 0) {
+          print("DKM $symbols ko có cặp với usdt ${list.length}");
+          return CoinPrice();
+        } else if ((list.length ?? 0) == 1) {
+          e = list.first;
+        } else {
+          print("DKM nó có leng khác 0 với 1 ${list.length}");
+          return null;
+        }
+      } else {
+        listNoded.add(coin);
+        print("Add $coin vào node");
+        if (e.symbol.endsWith(coin)) {
+          e.amount = coinPrice.amount * double.parse(e.bidPrice);
+        } else {
+          e.amount = coinPrice.amount * (1.0 / double.parse(e.bidPrice));
+        }
+      }
+      e.symbolNode = coin;
+      print("Liên kết mới : ${coinPrice.amount.toStringAsFixed(3)} ${symbols} =  ${e.amount.toStringAsFixed(3)} ${e.symbolNode}");
+      print("Kết thúc xét thằng coin ${e.symbolNode} => Thêm vào list child");
+      print("------------------------");
       return e;
     }).toList();
   }
@@ -79,8 +157,11 @@ class HomeCubit extends BaseCubit {
     // abc();
     fetchAllPrice().then((value) async {
       listAllPrice = value.toList();
+      listAllPrice = listAllPrice
+          .where((element) => double.parse(element.bidPrice) != 0)
+          .toList();
       print("${jsonEncode(value)}");
-      var a = await addAllCoupleWith("USDT", usdt);
+      newVersion();
 
       // var listUSDT = value.where((element) {
       //   return element.symbol.endsWith("USDT");
@@ -151,8 +232,8 @@ class HomeCubit extends BaseCubit {
         fetchPriceWithBUSD(element).then((valueBUSD) {
           CoinModel coin = CoinModel();
           coin.symbol = "${valueUSDT.symbol} ?? null";
-          coin.priceBuy = double.parse(valueUSDT.price ?? -1);
-          coin.priceNow = double.parse(valueBUSD.price ?? -1);
+          coin.priceBuy = double.parse(valueUSDT.bidPrice ?? -1);
+          coin.priceNow = double.parse(valueBUSD.bidPrice ?? -1);
           coin.amount = coin.priceBuy - coin.priceNow;
           a.add(coin);
           if (a.length == size) {
@@ -166,7 +247,7 @@ class HomeCubit extends BaseCubit {
 
   Future<List<CoinPrice>> fetchAllPrice() async {
     final response =
-        await http.get('https://www.binance.com/api/v1/ticker/allPrices');
+        await http.get('https://www.binance.com/api/v1/ticker/allBookTickers');
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,

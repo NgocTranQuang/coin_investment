@@ -26,7 +26,7 @@ class BPage extends BaseStatelessWidget<CubitA> {
             MyStreamBuilder<int>(
                 stream: cubit.count.stream,
                 builder: (context, snapshot) {
-                  eventBus.publish(snapshot.data);
+                  eventBus.publish("sfsdf");
                   return Text("${snapshot.data}");
                 }),
             FlatButton(

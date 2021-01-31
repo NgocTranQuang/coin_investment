@@ -24,7 +24,7 @@ class HomePage extends BaseStatelessWidget<HomeCubit> {
 
   @override
   initState() {
-    cubit.newVersion();
+    cubit.getPrice();
   }
 
   // @override
