@@ -7,12 +7,12 @@ import 'package:my_investment/pages/sceena/apage.dart';
 import 'package:my_investment/utils/app_routes.dart';
 
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized();
-  // SystemChrome.setPreferredOrientations(
-  //         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
-  //     .then((_) => runApp(MyApp()));
-  var home = HomeCubit();
-  home.getPrice();
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+          [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
+      .then((_) => runApp(MyApp()));
+  // var home = HomeCubit();
+  // home.getPrice();
 }
 
 class MyApp extends StatelessWidget {
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
           home: HomePage("Home page"),
-          initialRoute: HomePage.pageName,
+          initialRoute: APage.pageName,
           onGenerateRoute: (routeSetting) {
             return AppRoutes.generateRoute(routeSetting);
           },

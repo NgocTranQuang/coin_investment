@@ -1,15 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_event_bus/flutter_event_bus.dart';
 import 'package:my_investment/base/base_stateless_widget.dart';
 import 'package:my_investment/custom_widget/streambuilder/custom_streambuilder.dart';
-import 'package:my_investment/enum/enum_app.dart';
-import 'package:my_investment/model/coin_model.dart';
+import 'package:my_investment/model/final_result.dart';
 import 'package:my_investment/pages/home/home_cubit.dart';
-import 'package:my_investment/pages/home/row.dart';
-import 'package:my_investment/pages/sceena/apage.dart';
-import 'package:my_investment/pages/sceena/cubita.dart';
-import 'package:my_investment/utils/event_bus.dart';
+import 'package:my_investment/pages/home/row_result_price.dart';
 
 // ignore: must_be_immutable
 class HomePage extends BaseStatelessWidget<HomeCubit> {
@@ -35,21 +30,26 @@ class HomePage extends BaseStatelessWidget<HomeCubit> {
   //   });
   // }
 
-
   @override
   Widget getBody(BuildContext context) {
     print("bodyScreen");
 
-    return MyStreamBuilder<List<CoinModel>>(
-        stream: cubit.listCoins.stream,
+    return MyStreamBuilder<List<FinalResult>>(
+        stream: cubit.listCoinsFinalResult.stream,
         builder: (context, snapshot) {
           return Center(
-            child: ListView.builder(
-                itemCount: snapshot.data.length,
-                itemBuilder: (context, index) {
-                  var item = snapshot.data[index];
-                  return RowCoin(item);
-                }),
+            child: RefreshIndicator(
+              child: ListView.builder(
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (context, index) {
+                    var item = snapshot.data[index];
+                    return RowResultPrice(finalResult: item);
+                  }),
+              // ignore: missing_return
+              onRefresh: (){
+              return cubit.getPrice();
+              },
+            ),
           );
         });
   }

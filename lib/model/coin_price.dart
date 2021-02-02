@@ -6,14 +6,15 @@ part 'coin_price.g.dart';
 /// JSON serialization logic to be generated.
 @JsonSerializable()
 class CoinPrice {
-   String bidPrice;
+   // String bidPrice;
+   String askPrice;
    String symbol;
    double amount;
   List<CoinPrice> listChild;
    String symbolNode;
 
 
-   CoinPrice({this.bidPrice, this.symbol,this.amount,this.symbolNode,this.listChild});
+   CoinPrice({this.askPrice, this.symbol,this.amount,this.symbolNode,this.listChild});
 
   factory CoinPrice.fromJson(Map<String, dynamic> json) =>
       _$CoinPriceFromJson(json);
@@ -22,7 +23,12 @@ class CoinPrice {
 
   @override
   String toString() {
-    return "$symbolNode : $amount | full node(${symbol})";
+    return "Name: $symbolNode | Amount : $amount | full node(${symbol})";
   }
+   CoinPrice copy(){
+    return CoinPrice(askPrice: this.askPrice,symbol: this.symbol,symbolNode: this.symbolNode,listChild : this.listChild);
+   }
+   CoinPrice parent;
+
 }
 

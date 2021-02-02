@@ -1,62 +1,108 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:my_investment/base/base_cubit.dart';
 import 'package:my_investment/model/coin_model.dart';
 import 'package:my_investment/model/coin_price.dart';
+import 'package:my_investment/model/final_result.dart';
 import 'package:my_investment/utils/all_coin.dart';
 import 'package:rxdart/rxdart.dart';
 
 class HomeCubit extends BaseCubit {
   BehaviorSubject<List<CoinModel>> listCoins = BehaviorSubject();
+  BehaviorSubject<List<FinalResult>> listCoinsFinalResult = BehaviorSubject();
   var a = List<CoinModel>();
   var size = all_coin.length;
 
   var listAllPrice = List<CoinPrice>();
   var usdt = CoinPrice(
-      amount: 1000, bidPrice: "1", symbol: "USDT", symbolNode: "USDT");
+      amount: 1000, askPrice: "1", symbol: "USDT", symbolNode: "USDT");
   var listNoded = List<String>();
 
   var listCoinName = List<String>();
 
-  finListCoinName() {
-    listNoded.add("USDT");
-    listAllPrice.forEach((element) {
-      listCoinName.forEach((coin) {
-        if (element.symbol.contains(coin)) {}
+  var listFinalWithUSDT = List<CoinPrice>();
+  var listRoad = List<FinalResult>();
+
+  //////////////
+  getListCoinChenhLechGia() async {
+    // tìm tất cả các đồng tiền đi với USDT
+    await heueu();
+    await Future.delayed(Duration(seconds: 10));
+    calculator();
+  }
+
+  void heueu() {
+    findAllSymbolsWithASYNC(usdt, true).then((value) async {
+      usdt.listChild = value;
+      for (final element in value) {
+        if (element != null) {
+          await findAllSymbolsWithASYNC(element, false).then((value) async {
+            element.listChild = value;
+            if (value != null) {
+              for (final element in value) {
+                if (element != null) {
+                  await findAllSymbolsWithASYNC(element, false)
+                      .then((value) async {
+                    element.listChild = value;
+                    if (value != null) {
+                      for (final element in value) {
+                        if (element != null) {
+                          await findAllSymbolsWithASYNC(element, false)
+                              .then((value) {
+                            element.listChild = value;
+                          });
+                        }
+                      }
+                    }
+                  });
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+  }
+
+  void calculator() {
+    var i = 0;
+    listFinalWithUSDT.sort((a, b) {
+      return b.amount.compareTo(a.amount);
+    });
+    print("Bắt đầu show ${listFinalWithUSDT.length} kết quả");
+    forListWithAndDoSomeThing(listFinalWithUSDT, (element) async {
+      listRoad.add(handleRoadMap(element, FinalResult()));
+    }).then((value) {
+      listCoinsFinalResult.sink.add(listRoad);
+      hideLoading();
+      listRoad.forEach((element) {
+        i++;
+        print("${i} ############################");
+        print("${element.roadName}");
+        print("${element.roadAmount}");
+        print("############################");
       });
     });
   }
 
-  //////////////
-  newVersion() {
-    // tìm tất cả các đồng tiền đi với USDT
-
-    // var listWithUSDT = findAllSymbolsWith(usdt, true);
-    findAllSymbolsWithASYNC(usdt, true).then((value) async {
-      value.forEach((element) {
-        print("DKM foreach ${element.symbol}");
-        element.listChild = findAllSymbolsWith(element, false);
-      });
-    });
-    // listWithUSDT.forEach((element) {
-    //   element.listChild = findAllSymbolsWith(element, false);
-    // });
-    print("object");
-
-    // listWithUSDT.forEach((element) {
-    //   // element.listChild =
-    // });
-    // listWithUSDT.forEach((element) {
-    //   element.listChild.forEach((element) {});
-    // });
-    // tìm tất cả những đồng tiền của những đồng tiền đi với usdt
-    // listWithUSDT.forEach((element) {
-    //   element.listChild = findAllSymbolsWith(element.symbol);
-    // });
-    // listWithUSDT.forEach((element) {
-    //   element.listChild.forEach((element) {});
-    // });
+  FinalResult handleRoadMap(CoinPrice coinPrice, FinalResult itemRs) {
+    var startName = "";
+    var startAmount = "";
+    if (itemRs.roadName != null) {
+      startName = "${itemRs.roadName} -> ";
+    }
+    if (itemRs.roadAmount != null) {
+      startAmount = "${itemRs.roadAmount} -> ";
+    }
+    itemRs.roadName = "${startName}${coinPrice.symbolNode}";
+    itemRs.roadAmount = "${startAmount}${coinPrice.amount}";
+    if (coinPrice.parent != null) {
+      return handleRoadMap(coinPrice.parent, itemRs);
+    } else {
+      return itemRs;
+    }
   }
 
   Future forListWithAndDoSomeThing(
@@ -90,94 +136,94 @@ class HomeCubit extends BaseCubit {
         return null;
       }
     }
-    var listWithSymbol = listAllPrice
-        .where((element) => ((element.symbol.startsWith(symbols) ||
-            element.symbol.endsWith(symbols))))
-        .toList();
-    print("Coin $symbols có ${listWithSymbol.length} thằng coin con cặp với nó");
-    return listWithSymbol.map((ele) {
-      var e = CoinPrice(
-          symbol: ele.symbol,
-          amount: ele.amount,
-          bidPrice: ele.bidPrice,
-          symbolNode: ele.symbolNode,
-          listChild: ele.listChild);
-      print("------------------------");
-      var coin = e.symbol.replaceAll(symbols, "");
-      print("Bắt đầu xét thằng ${coin}");
-      // vì điều kiện where như vậy chưa chắc là lấy đúng những đồng coin có đi cặp với symbols,nên ở đây cần phải check đồng coin đó có dc giao dịch với btc nữa hay ko
-      if (coin != "BTC") {
-        var listWithBtc = listAllPrice
-            .where((element) => (element.symbol == "${coin}BTC" ||
-                element.symbol == "BTC${coin}"))
-            .toList();
-        if (listWithBtc.length == 0) {
-          print("Đồng ${coin} này méo dc giao dịch với BTC");
-          return CoinPrice();
-        }
-      }
-      if (listNoded.contains(coin) || coin == "") {
-        print("Coin $coin này đã có trong node");
-        // coin này đã có trong node
-        // lấy cặp symbol với USDT
-        var list = listAllPrice
-            .where((element) => (element.symbol == "${symbols}USDT" ||
-                element.symbol == "USDT${symbols}"))
-            .toList();
-        if ((list?.length ?? 0) == 0) {
-          print("DKM $symbols ko có cặp với usdt ${list.length}");
-          return CoinPrice();
-        } else if ((list.length ?? 0) == 1) {
-          e = list.first;
+    if (listNoded.contains(symbols)) {
+      // có trong node rồi thì về với usdt chứ chi nựa
+      print("$symbols đã có trong list, giờ tìm cặp $symbols với USDT nữa");
+      var list = listAllPrice
+          .where((element) => (element.symbol == "${symbols}USDT" ||
+              element.symbol == "USDT${symbols}"))
+          .toList();
+      if ((list?.length ?? 0) == 0) {
+        print("$symbols ko có cặp với usdt ");
+        return null;
+      } else if ((list.length ?? 0) == 1) {
+        var e = list.first.copy();
+        if (e.symbol.endsWith("USDT")) {
+          e.amount = coinPrice.amount * double.parse(e.askPrice);
         } else {
-          print("DKM nó có leng khác 0 với 1 ${list.length}");
-          return null;
+          e.amount = coinPrice.amount * (1.0 / double.parse(e.askPrice));
         }
+        e.symbolNode = "USDT";
+        e.parent = coinPrice;
+        print("Đã tìm thấy cặp $symbols USDT| ${e.toString()}");
+        print(
+            "Coin cha : ${coinPrice.toString()}   | coin con : ${e.toString()}");
+        print(
+            "Liên kết mới : ${coinPrice.amount.toStringAsFixed(3)} ${symbols} =  ${e.amount.toStringAsFixed(3)} ${e.symbolNode}");
+        print("Kết thúc xét thằng coin ${e.symbolNode} => Thêm vào list child");
+        print("------------------------");
+        listFinalWithUSDT.add(e);
+        return List<CoinPrice>.generate(1, (index) => e);
       } else {
-        listNoded.add(coin);
+        print("DKM nó có leng khác 0 với 1 ${list.length}");
+        return null;
+      }
+    } else {
+      listNoded.add(symbols);
+      var listWithSymbol = listAllPrice
+          .where((element) => ((element.symbol.startsWith(symbols) ||
+              element.symbol.endsWith(symbols))))
+          .toList();
+      print(
+          "Coin $symbols có ${listWithSymbol.length} thằng coin con cặp với nó");
+      return listWithSymbol.map((ele) {
+        var e = ele.copy();
+        print("------------------------");
+        var coin = e.symbol.replaceAll(symbols, "");
+        print("Bắt đầu xét thằng ${coin}");
+        // vì điều kiện where như vậy chưa chắc là lấy đúng những đồng coin có đi cặp với symbols,nên ở đây cần phải check đồng coin đó có dc giao dịch với btc nữa hay ko
+        if (coin != "BTC") {
+          var listWithBtc = listAllPrice
+              .where((element) => (element.symbol == "${coin}BTC" ||
+                  element.symbol == "BTC${coin}"))
+              .toList();
+          if (listWithBtc.length == 0) {
+            print("Đồng ${coin} này méo dc giao dịch với BTC");
+            return CoinPrice();
+          }
+        }
+
         print("Add $coin vào node");
         if (e.symbol.endsWith(coin)) {
-          e.amount = coinPrice.amount * double.parse(e.bidPrice);
+          e.amount = coinPrice.amount * double.parse(e.askPrice);
         } else {
-          e.amount = coinPrice.amount * (1.0 / double.parse(e.bidPrice));
+          e.amount = coinPrice.amount * (1.0 / double.parse(e.askPrice));
         }
-      }
-      e.symbolNode = coin;
-      print("Liên kết mới : ${coinPrice.amount.toStringAsFixed(3)} ${symbols} =  ${e.amount.toStringAsFixed(3)} ${e.symbolNode}");
-      print("Kết thúc xét thằng coin ${e.symbolNode} => Thêm vào list child");
-      print("------------------------");
-      return e;
-    }).toList();
+        e.symbolNode = coin;
+        e.parent = coinPrice;
+
+        print(
+            "Coin cha : ${coinPrice.toString()}   | coin con : ${e.toString()}");
+        print(
+            "Liên kết mới : ${coinPrice.amount.toStringAsFixed(3)} ${symbols} =  ${e.amount.toStringAsFixed(3)} ${e.symbolNode}");
+        print("Kết thúc xét thằng coin ${e.symbolNode} => Thêm vào list child");
+        print("------------------------");
+        return e;
+      }).toList();
+    }
   }
 
   ///////////////
 
-  getPrice() async {
+  Future<String> getPrice() async {
     showLoading();
-    // abc();
     fetchAllPrice().then((value) async {
       listAllPrice = value.toList();
       listAllPrice = listAllPrice
-          .where((element) => double.parse(element.bidPrice) != 0)
+          .where((element) => double.parse(element.askPrice) != 0)
           .toList();
-      print("${jsonEncode(value)}");
-      newVersion();
-
-      // var listUSDT = value.where((element) {
-      //   return element.symbol.endsWith("USDT");
-      // }).toList();
-      //
-      // listUSDT.forEach((element) {
-      //   var coin = element.symbol.replaceAll("USDT", "");
-      //   element.listChild = value.where((element) {
-      //     return element.symbol.contains(coin);
-      //   }).toList();
-      // });
-      // // var list2 = value.where((element) {
-      // //   return element.symbol.startsWith("USDT");
-      // // });
-      // print(jsonEncode(listUSDT));
-      hideLoading();
+      await getListCoinChenhLechGia();
+      return "success";
     });
   }
 
@@ -224,25 +270,6 @@ class HomeCubit extends BaseCubit {
         //   return e;
         // })
         .toList();
-  }
-
-  abc() {
-    for (var element in all_coin) {
-      fetchPriceWithUSDT(element).then((valueUSDT) {
-        fetchPriceWithBUSD(element).then((valueBUSD) {
-          CoinModel coin = CoinModel();
-          coin.symbol = "${valueUSDT.symbol} ?? null";
-          coin.priceBuy = double.parse(valueUSDT.bidPrice ?? -1);
-          coin.priceNow = double.parse(valueBUSD.bidPrice ?? -1);
-          coin.amount = coin.priceBuy - coin.priceNow;
-          a.add(coin);
-          if (a.length == size) {
-            listCoins.sink.add(a);
-            hideLoading();
-          }
-        });
-      });
-    }
   }
 
   Future<List<CoinPrice>> fetchAllPrice() async {
@@ -295,6 +322,7 @@ class HomeCubit extends BaseCubit {
   dispose() {
     super.dispose();
     listCoins.close();
+    listCoinsFinalResult.close();
   }
 
   tenHam(int Function(String a) haha) {
