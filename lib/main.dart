@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
           home: HomePage("Home page"),
-          initialRoute: APage.pageName,
+          initialRoute: HomePage.pageName,
           onGenerateRoute: (routeSetting) {
             return AppRoutes.generateRoute(routeSetting);
           },

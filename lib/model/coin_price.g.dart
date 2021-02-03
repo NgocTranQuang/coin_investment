@@ -8,7 +8,8 @@ part of 'coin_price.dart';
 
 CoinPrice _$CoinPriceFromJson(Map<String, dynamic> json) {
   return CoinPrice(
-    askPrice: json['bidPrice'] as String,
+    askPrice: json['askPrice'] as String,
+    bidPrice: json['bidPrice'] as String,
     symbol: json['symbol'] as String,
     symbolNode: json['symbolNode'] as String,
     amount: json['amount'] as double,
@@ -20,7 +21,8 @@ CoinPrice _$CoinPriceFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, dynamic> _$CoinPriceToJson(CoinPrice instance) => <String, dynamic>{
-      'bidPrice': instance.askPrice,
+      'askPrice': instance.askPrice,
+      'bidPrice': instance.bidPrice,
       'symbol': instance.symbol,
       'listChild': instance.listChild,
       'symbolNode': instance.symbolNode,

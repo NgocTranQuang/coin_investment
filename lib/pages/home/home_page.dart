@@ -10,6 +10,8 @@ import 'package:my_investment/pages/home/row_result_price.dart';
 class HomePage extends BaseStatelessWidget<HomeCubit> {
   // final String title;
   static const String pageName = "HomePage";
+  bool isOnTop = true;
+  final _controller = ScrollController();
 
   HomePage(String title) : super(title);
 
@@ -40,14 +42,15 @@ class HomePage extends BaseStatelessWidget<HomeCubit> {
           return Center(
             child: RefreshIndicator(
               child: ListView.builder(
+                  controller: _controller,
                   itemCount: snapshot.data.length,
                   itemBuilder: (context, index) {
                     var item = snapshot.data[index];
-                    return RowResultPrice(finalResult: item);
+                    return RowResultPrice(key:UniqueKey(),finalResult: item);
                   }),
               // ignore: missing_return
-              onRefresh: (){
-              return cubit.getPrice();
+              onRefresh: () {
+                return cubit.getPrice();
               },
             ),
           );
@@ -58,9 +61,29 @@ class HomePage extends BaseStatelessWidget<HomeCubit> {
   FloatingActionButton getFloatButton(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
-        cubit.showLoading();
+        isOnTop = !isOnTop;
+        if(isOnTop){
+          _controller.animateTo(
+            _controller.position.maxScrollExtent,
+            duration: Duration(seconds: 1),
+            curve: Curves.fastOutSlowIn,
+          );
+        }else{
+          _controller.animateTo(
+            _controller.position.minScrollExtent,
+            duration: Duration(seconds: 1),
+            curve: Curves.fastOutSlowIn,
+          );
+        }
+        cubit.isOnTop.sink.add(isOnTop);
       },
-      child: Icon(Icons.add),
+      child:
+          StreamBuilder<bool>(
+            stream: cubit.isOnTop.stream,
+            builder: (context, snapshot) {
+              return Icon(snapshot.data == true ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up);
+            }
+          ),
     );
   }
 

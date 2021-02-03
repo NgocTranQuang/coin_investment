@@ -11,13 +11,18 @@ import 'package:rxdart/rxdart.dart';
 
 class HomeCubit extends BaseCubit {
   BehaviorSubject<List<CoinModel>> listCoins = BehaviorSubject();
+  BehaviorSubject<bool> isOnTop = BehaviorSubject.seeded(true);
   BehaviorSubject<List<FinalResult>> listCoinsFinalResult = BehaviorSubject();
   var a = List<CoinModel>();
   var size = all_coin.length;
 
   var listAllPrice = List<CoinPrice>();
   var usdt = CoinPrice(
-      amount: 1000, askPrice: "1", symbol: "USDT", symbolNode: "USDT");
+      amount: 1000,
+      askPrice: "1",
+      symbol: "USDT",
+      symbolNode: "USDT",
+      level: 0);
   var listNoded = List<String>();
 
   var listCoinName = List<String>();
@@ -28,76 +33,87 @@ class HomeCubit extends BaseCubit {
   //////////////
   getListCoinChenhLechGia() async {
     // tìm tất cả các đồng tiền đi với USDT
-    await heueu();
-    await Future.delayed(Duration(seconds: 10));
+    await heueu().then((value) {});
+    await Future.delayed(Duration(seconds: 5));
     calculator();
   }
 
-  void heueu() {
+  Future<String> heueu() async {
     findAllSymbolsWithASYNC(usdt, true).then((value) async {
       usdt.listChild = value;
-      for (final element in value) {
-        if (element != null) {
-          await findAllSymbolsWithASYNC(element, false).then((value) async {
-            element.listChild = value;
-            if (value != null) {
-              for (final element in value) {
-                if (element != null) {
-                  await findAllSymbolsWithASYNC(element, false)
-                      .then((value) async {
-                    element.listChild = value;
-                    if (value != null) {
-                      for (final element in value) {
-                        if (element != null) {
-                          await findAllSymbolsWithASYNC(element, false)
-                              .then((value) {
-                            element.listChild = value;
-                          });
+      if(value!=null) {
+        for (final element in value) {
+          if (element != null) {
+            await findAllSymbolsWithASYNC(element, false).then((value) async {
+              element.listChild = value;
+              if (value != null) {
+                for (final element in value) {
+                  if (element != null) {
+                    await findAllSymbolsWithASYNC(element, false)
+                        .then((value) async {
+                      element.listChild = value;
+                      if (value != null) {
+                        for (final element in value) {
+                          if (element != null) {
+                            await findAllSymbolsWithASYNC(element, false)
+                                .then((value) {
+                              element.listChild = value;
+                            });
+                          }
                         }
                       }
-                    }
-                  });
+                    });
+                  }
                 }
               }
-            }
-          });
+            });
+          }
         }
       }
+    }).then((value) {
+      return "";
     });
   }
 
   void calculator() {
-    var i = 0;
     listFinalWithUSDT.sort((a, b) {
-      return b.amount.compareTo(a.amount);
+      var checLechB = (b.amount - 1000);
+      if (checLechB < 0) {
+        checLechB = checLechB * -1;
+      }
+      var checLechA = (a.amount - 1000);
+      if (checLechA < 0) {
+        checLechA = checLechA * -1;
+      }
+      return checLechB.compareTo(checLechA);
     });
+
     print("Bắt đầu show ${listFinalWithUSDT.length} kết quả");
     forListWithAndDoSomeThing(listFinalWithUSDT, (element) async {
       listRoad.add(handleRoadMap(element, FinalResult()));
     }).then((value) {
       listCoinsFinalResult.sink.add(listRoad);
       hideLoading();
-      listRoad.forEach((element) {
-        i++;
-        print("${i} ############################");
-        print("${element.roadName}");
-        print("${element.roadAmount}");
-        print("############################");
-      });
     });
   }
 
   FinalResult handleRoadMap(CoinPrice coinPrice, FinalResult itemRs) {
     var startName = "";
     var startAmount = "";
+    var startPrice = "";
     if (itemRs.roadName != null) {
       startName = "${itemRs.roadName} -> ";
     }
     if (itemRs.roadAmount != null) {
       startAmount = "${itemRs.roadAmount} -> ";
     }
+    if (itemRs.roadPrice != null) {
+      startPrice = "${itemRs.roadPrice} -> ";
+    }
     itemRs.roadName = "${startName}${coinPrice.symbolNode}";
     itemRs.roadAmount = "${startAmount}${coinPrice.amount}";
+    itemRs.roadPrice = "${startPrice}${coinPrice.tradeWithPrice}";
+
     if (coinPrice.parent != null) {
       return handleRoadMap(coinPrice.parent, itemRs);
     } else {
@@ -148,12 +164,26 @@ class HomeCubit extends BaseCubit {
         return null;
       } else if ((list.length ?? 0) == 1) {
         var e = list.first.copy();
-        if (e.symbol.endsWith("USDT")) {
-          e.amount = coinPrice.amount * double.parse(e.askPrice);
-        } else {
-          e.amount = coinPrice.amount * (1.0 / double.parse(e.askPrice));
+        String priceToTrade;
+        if(coinPrice.level%2 ==0){
+          // level coin hiện tại là lẻ
+          //đang mua => dựa vào giá bán =>bid price
+          priceToTrade = e.bidPrice;
+        }else{
+          // đang bán coin => dựa vào giá mua => ask price
+          priceToTrade = e.askPrice;
         }
+
+        double tradeWithPrice;
+        if (e.symbol.endsWith("USDT")) {
+          tradeWithPrice =  double.parse(priceToTrade);
+        } else {
+          tradeWithPrice = (1.0/ double.parse(priceToTrade));
+        }
+        e.amount = coinPrice.amount * tradeWithPrice;
+        e.tradeWithPrice = "$tradeWithPrice";
         e.symbolNode = "USDT";
+        e.level = coinPrice.level + 1;
         e.parent = coinPrice;
         print("Đã tìm thấy cặp $symbols USDT| ${e.toString()}");
         print(
@@ -171,8 +201,7 @@ class HomeCubit extends BaseCubit {
     } else {
       listNoded.add(symbols);
       var listWithSymbol = listAllPrice
-          .where((element) => ((element.symbol.startsWith(symbols) ||
-              element.symbol.endsWith(symbols))))
+          .where((element) => ((element.symbol.startsWith(symbols) || element.symbol.endsWith(symbols)) && !element.symbol.contains(coinPrice.parent.symbolNode)))
           .toList();
       print(
           "Coin $symbols có ${listWithSymbol.length} thằng coin con cặp với nó");
@@ -194,12 +223,28 @@ class HomeCubit extends BaseCubit {
         }
 
         print("Add $coin vào node");
-        if (e.symbol.endsWith(coin)) {
-          e.amount = coinPrice.amount * double.parse(e.askPrice);
-        } else {
-          e.amount = coinPrice.amount * (1.0 / double.parse(e.askPrice));
+        if (coinPrice.symbolNode == "BTC" && coin == "PHB") {
+          print("Đến rồi");
         }
+        String priceToTrade;
+        if(coinPrice.level%2 ==0){
+          // level coin hiện tại là lẻ
+          //đang mua => dựa vào giá bán =>bid price
+          priceToTrade = e.bidPrice;
+        }else{
+          // đang bán coin => dựa vào giá mua => ask price
+          priceToTrade = e.askPrice;
+        }
+        double tradeWithPrice;
+        if (e.symbol.endsWith(coin)) {
+          tradeWithPrice =  double.parse(priceToTrade);
+        } else {
+          tradeWithPrice = (1.0/ double.parse(priceToTrade));
+        }
+        e.tradeWithPrice = "$tradeWithPrice";
+        e.amount = coinPrice.amount * tradeWithPrice;
         e.symbolNode = coin;
+        e.level = coinPrice.level + 1;
         e.parent = coinPrice;
 
         print(
@@ -225,51 +270,6 @@ class HomeCubit extends BaseCubit {
       await getListCoinChenhLechGia();
       return "success";
     });
-  }
-
-  addAllCoupleWith(
-    String mainSymbols,
-    CoinPrice coinPrice,
-  ) {
-    print("Bắt đầu tìm list chid của  ${coinPrice.symbol}");
-    coinPrice.listChild = findAllCoupleWith(mainSymbols, coinPrice.symbol);
-  }
-
-  List<CoinPrice> findAllCoupleWith(String mainSymbols, String symbolsEx) {
-    print("Đang chạy tìm tất cả các cặp tiền của $mainSymbols");
-    var parentSymbol = symbolsEx.replaceAll(mainSymbols, "");
-    return listAllPrice.where((element) {
-      if (mainSymbols == "ETH" && parentSymbol == "BTC") {
-        print("abcd");
-      }
-      return element.symbol.contains(mainSymbols) &&
-          !element.symbol.contains(parentSymbol);
-    })
-        // .toList()
-        // .map((e) {
-        //   var coin = e.symbol.replaceAll(mainSymbols, "");
-        //   print("Các cặp tiền của $mainSymbols là  ${coin}");
-        //   if (coin != "") {
-        //     var l = listNoded.where((element) {
-        //       return element == coin;
-        //     }).toList();
-        //     if (l.length == 0) {
-        //       if (coin != "USDT") {
-        //         listNoded.add(coin);
-        //       }
-        //       addAllCoupleWith(coin, e);
-        //     } else {
-        //       e.listChild = listAllPrice
-        //               .where((element) =>
-        //                   (element.symbol.contains("USDT$mainSymbols") ||
-        //                       element.symbol.contains("${mainSymbols}USDT")))
-        //               .toList() ??
-        //           List<CoinPrice>.generate(1, (index) => CoinPrice(price :"1", symbol: "Ko co USDT$mainSymbols hoặc ${mainSymbols}USDT"));
-        //     }
-        //   }
-        //   return e;
-        // })
-        .toList();
   }
 
   Future<List<CoinPrice>> fetchAllPrice() async {
@@ -323,6 +323,7 @@ class HomeCubit extends BaseCubit {
     super.dispose();
     listCoins.close();
     listCoinsFinalResult.close();
+    isOnTop.close();
   }
 
   tenHam(int Function(String a) haha) {

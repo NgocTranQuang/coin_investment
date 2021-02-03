@@ -8,6 +8,7 @@ class RowResultPrice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("Load lại cell này : ${finalResult.toString()}");
     return Container(
       child: Padding(
         padding: EdgeInsets.all(16),
@@ -15,6 +16,9 @@ class RowResultPrice extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("${finalResult.roadName}"),
+            SizedBox(height: 4,),
+            Text("${finalResult.roadPrice}"),
+            SizedBox(height: 4,),
             Text("${finalResult.roadAmount}"),
           ],
         ),
